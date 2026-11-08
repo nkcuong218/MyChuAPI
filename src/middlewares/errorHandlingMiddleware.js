@@ -1,0 +1,21 @@
+import { StatusCodes } from '~/utils/constants'
+import { env } from '~/config/environment'
+
+// eslint-disable-next-line no-unused-vars
+export const errorHandlingMiddleware = (err, req, res, next) => {
+  if (!err.statusCode) err.statusCode = StatusCodes.INTERNAL_SERVER_ERROR
+
+  const responseError = {
+    statusCode: err.statusCode,
+    message: err.message || StatusCodes[err.statusCode] || 'Internal Server Error',
+    stack: err.stack
+  }
+
+  // Hide stack trace in production mode
+  if (env.BUILD_MODE !== 'dev') {
+    delete responseError.stack
+  }
+
+  res.status(err.statusCode).json(responseError)
+}
+
