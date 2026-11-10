@@ -1,6 +1,7 @@
 import express from 'express'
 import { orderController } from '~/controllers/orderController'
 import { orderValidation } from '~/validations/orderValidation'
+import { isAdmin } from '~/middlewares/authMiddleware'
 
 const Router = express.Router()
 
@@ -10,10 +11,10 @@ Router.route('/')
 
 Router.route('/:id')
   .get(orderController.getDetail)
-  .put(orderController.update)
+  .put(isAdmin, orderController.update)
 
 Router.route('/:id/status')
-  .put(orderValidation.updateStatus, orderController.updateStatus)
+  .put(isAdmin, orderValidation.updateStatus, orderController.updateStatus)
 
 export const orderRoute = Router
 

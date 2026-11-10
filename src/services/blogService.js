@@ -30,9 +30,17 @@ const createNew = async (reqBody) => {
   }
 }
 
-const getReviews = async () => {
+const getReviews = async (productId) => {
   try {
-    return await blogModel.getReviews()
+    return await blogModel.getReviews(productId)
+  } catch (error) {
+    throw error
+  }
+}
+
+const deleteReview = async (id) => {
+  try {
+    return await blogModel.deleteReview(id)
   } catch (error) {
     throw error
   }
@@ -51,6 +59,7 @@ export const blogService = {
   getBySlug,
   createNew,
   getReviews,
+  deleteReview,
   createReview
 }
 

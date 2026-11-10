@@ -20,10 +20,12 @@ const BLOG_SCHEMA = Joi.object({
 })
 
 const REVIEW_SCHEMA = Joi.object({
+  productId: Joi.alternatives().try(Joi.number(), Joi.string()).optional(),
   name: Joi.string().required().trim().strict(),
   city: Joi.string().optional().allow('').default(''),
   review: Joi.string().required().trim().strict(),
   rate: Joi.number().min(1).max(5).default(5),
+  date: Joi.string().optional(),
   createdAt: Joi.date().timestamp('javascript').default(Date.now)
 })
 
@@ -72,9 +74,34 @@ const createNew = async (data) => {
   }
 }
 
-const getReviews = async () => {
+const getReviews = async (productId) => {
   try {
-    return await GET_DB().collection(COLLECTION_REVIEWS).find({}).toArray()
+    const query = {}
+    if (productId !== undefined && productId !== null && productId !== '') {
+      const numId = Number(productId)
+      query.$or = [
+        { productId: productId },
+        { productId: String(productId) }
+      ]
+      if (!Number.isNaN(numId)) {
+        query.$or.push({ productId: numId })
+      }
+    }
+    return await GET_DB().collection(COLLECTION_REVIEWS).find(query).sort({ createdAt: -1 }).toArray()
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+
+const deleteReview = async (id) => {
+  try {
+    const { ObjectId } = await import('mongodb')
+    let query = { id: id }
+    if (ObjectId.isValid(id)) {
+      query = { $or: [{ _id: new ObjectId(id) }, { id: id }] }
+    }
+    const result = await GET_DB().collection(COLLECTION_REVIEWS).deleteOne(query)
+    return result
   } catch (error) {
     throw new Error(error)
   }
@@ -99,5 +126,6 @@ export const blogModel = {
   findBySlug,
   createNew,
   getReviews,
+  deleteReview,
   createReview
 }

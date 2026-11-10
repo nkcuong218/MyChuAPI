@@ -30,8 +30,17 @@ const createNew = async (req, res, next) => {
 
 const getReviews = async (req, res, next) => {
   try {
-    const reviews = await blogService.getReviews()
+    const reviews = await blogService.getReviews(req.query.productId)
     res.status(StatusCodes.OK).json(reviews)
+  } catch (error) {
+    next(error)
+  }
+}
+
+const deleteReview = async (req, res, next) => {
+  try {
+    const result = await blogService.deleteReview(req.params.id)
+    res.status(StatusCodes.OK).json({ message: 'Đã xoá đánh giá!', result })
   } catch (error) {
     next(error)
   }
@@ -51,6 +60,7 @@ export const blogController = {
   getBySlug,
   createNew,
   getReviews,
+  deleteReview,
   createReview
 }
 

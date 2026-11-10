@@ -39,33 +39,53 @@ const createNew = async (reqBody) => {
 
     // Handle voucher discount
     let discount = 0
-    if (voucherCode && voucherCode.trim() !== '') {
-      const voucher = await voucherModel.findByCode(voucherCode)
-      if (voucher && voucher.active) {
-        const today = new Date().toISOString().slice(0, 10)
-        const isExpired = (voucher.startDate && today < voucher.startDate) || (voucher.endDate && today > voucher.endDate)
-        const isOutOfUses = voucher.used >= voucher.quantity
-        const isMinOrderValid = !voucher.minOrder || subtotal >= voucher.minOrder
+    const validVoucherCodes = []
 
-        if (!isExpired && !isOutOfUses && isMinOrderValid) {
-          if (voucher.type === 'percent') {
-            discount = (subtotal * voucher.value) / 100
-            if (voucher.maxDiscount && discount > voucher.maxDiscount) {
-              discount = voucher.maxDiscount
+    if (voucherCode && String(voucherCode).trim() !== '') {
+      // Ho tro ca 1 ma hoac nhieu ma cach nhau boi dau phay (vi du: MICHU10, FREESHIP)
+      const codes = String(voucherCode)
+        .split(/[,+]/)
+        .map((c) => c.trim().toUpperCase())
+        .filter(Boolean)
+
+      for (const code of codes) {
+        const voucher = await voucherModel.findByCode(code)
+        if (voucher && voucher.active) {
+          const today = new Date().toISOString().slice(0, 10)
+          const isExpired = (voucher.startDate && today < voucher.startDate) || (voucher.endDate && today > voucher.endDate)
+          const isOutOfUses = voucher.used >= voucher.quantity
+          const isMinOrderValid = !voucher.minOrder || subtotal >= voucher.minOrder
+
+          if (!isExpired && !isOutOfUses && isMinOrderValid) {
+            let voucherDiscount = 0
+            if (voucher.type === 'percent') {
+              voucherDiscount = (subtotal * voucher.value) / 100
+              if (voucher.maxDiscount && voucherDiscount > voucher.maxDiscount) {
+                voucherDiscount = voucher.maxDiscount
+              }
+            } else if (voucher.type === 'fixed') {
+              voucherDiscount = Math.min(voucher.value, subtotal)
+            } else if (voucher.type === 'shipping') {
+              voucherDiscount = Math.min(voucher.value, Number(shippingFee))
             }
-          } else if (voucher.type === 'fixed') {
-            discount = Math.min(voucher.value, subtotal)
-          } else if (voucher.type === 'shipping') {
-            discount = Math.min(voucher.value, shippingFee)
-          }
 
-          // Increment voucher usage
-          await voucherModel.incrementUsed(voucher.code)
+            discount += voucherDiscount
+            validVoucherCodes.push(voucher.code)
+            await voucherModel.incrementUsed(voucher.code).catch(() => {})
+          }
         }
       }
     }
 
-    const total = Math.max(0, subtotal + Number(shippingFee) - discount)
+    // Neu backend khong tim thay voucher trong DB (hoac demo/offline voucher) nhung frontend da tinh discount hop le
+    if (discount === 0 && Number(reqBody.discount) > 0) {
+      discount = Number(reqBody.discount)
+    }
+
+    const finalTotal = Math.max(0, subtotal + Number(shippingFee) - discount)
+    const finalVoucherCode = validVoucherCodes.length > 0
+      ? validVoucherCodes.join(', ')
+      : (voucherCode ? String(voucherCode).trim() : '')
 
     // Deduct stock from products
     for (const item of verifiedItems) {
@@ -79,8 +99,8 @@ const createNew = async (reqBody) => {
       subtotal,
       shippingFee: Number(shippingFee),
       discount,
-      voucherCode: voucherCode || '',
-      total,
+      voucherCode: finalVoucherCode,
+      total: finalTotal,
       payment: payment || 'Thanh toán khi nhận hàng',
       status: ORDER_STATUS.PENDING,
       note: note || '',

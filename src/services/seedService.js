@@ -59,9 +59,11 @@ const initialOrders = [
 ]
 
 const initialReviews = [
-  { id: 1, name: 'Nguyễn Thị Hoa', city: 'Hà Nội', review: 'Mì Chũ này đúng vị quê hương, dai giòn, không bị nát khi nấu. Gia đình tôi đặt mua thường xuyên!', rate: 5 },
-  { id: 2, name: 'Trần Văn Minh', city: 'TP. Hồ Chí Minh', review: 'Lần đầu thử Mì Chũ truyền thống, không ngờ ngon thế. Giao hàng nhanh, đóng gói cẩn thận.', rate: 5 },
-  { id: 3, name: 'Lê Phương Thảo', city: 'Đà Nẵng', review: 'Mua làm quà biếu cho đối tác, ai cũng khen. Bao bì đẹp, sản phẩm chất lượng cao', rate: 4 }
+  { id: 1, productId: 1, name: 'Nguyễn Thị Hoa', city: 'Hà Nội', review: 'Mì Chũ này đúng vị quê hương, dai giòn, không bị nát khi nấu. Gia đình tôi đặt mua thường xuyên!', rate: 5, date: '2026-11-01' },
+  { id: 2, productId: 1, name: 'Trần Văn Minh', city: 'TP. Hồ Chí Minh', review: 'Lần đầu thử Mì Chũ truyền thống, không ngờ ngon thế. Giao hàng nhanh, đóng gói cẩn thận.', rate: 5, date: '2026-11-03' },
+  { id: 3, productId: 2, name: 'Lê Phương Thảo', city: 'Đà Nẵng', review: 'Mua mì tươi về ăn lẩu tuyệt vời, sợi mì mềm dai không nát chút nào. Sẽ tiếp tục ủng hộ!', rate: 4, date: '2026-11-05' },
+  { id: 4, productId: 3, name: 'Phạm Văn Nam', city: 'Bắc Ninh', review: 'Bánh đa gạo lứt thơm bùi, ăn kiêng healthy rất tốt.', rate: 5, date: '2026-11-06' },
+  { id: 5, productId: 4, name: 'Hoàng Lan', city: 'Hải Phòng', review: 'Combo gia đình rất tiết kiệm, đóng gói hộp đẹp làm quà biếu chuẩn luôn.', rate: 5, date: '2026-11-07' }
 ]
 
 const initialBlogs = [

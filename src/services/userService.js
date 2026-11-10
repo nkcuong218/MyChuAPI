@@ -2,6 +2,8 @@ import { userModel } from '~/models/userModel'
 import { orderModel } from '~/models/orderModel'
 import ApiError from '~/utils/ApiError'
 import { StatusCodes, USER_ROLES } from '~/utils/constants'
+import { hashPassword, verifyPassword } from '~/utils/password'
+import { generateToken } from '~/utils/jwt'
 
 const register = async (reqBody) => {
   try {
@@ -12,11 +14,13 @@ const register = async (reqBody) => {
       throw new ApiError(StatusCodes.CONFLICT, 'Email này đã được sử dụng!')
     }
 
+    const hashedPassword = hashPassword(password || '123456')
+
     const newUser = await userModel.createNew({
       name,
       email,
       phone,
-      password: password || '123456',
+      password: hashedPassword,
       address: address || '',
       role: USER_ROLES.CUSTOMER,
       status: 'active'
@@ -43,15 +47,21 @@ const login = async (reqBody) => {
       throw new ApiError(StatusCodes.FORBIDDEN, 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên!')
     }
 
-    // In production, compare with bcrypt. For this demo, check string equality
-    if (user.password && user.password !== password) {
+    const isMatch = verifyPassword(password, user.password)
+    if (!isMatch) {
       throw new ApiError(StatusCodes.UNAUTHORIZED, 'Email hoặc mật khẩu không chính xác!')
     }
 
     const { password: _, ...userWithoutPassword } = user
+    const token = generateToken({
+      id: user.id,
+      email: user.email,
+      role: user.role
+    })
+
     return {
       user: userWithoutPassword,
-      token: `fake-jwt-token-for-${user.id}`
+      token
     }
   } catch (error) {
     throw error
@@ -95,7 +105,11 @@ const update = async (id, reqBody) => {
 
     // Don't accidentally overwrite password with empty string
     const updateData = { ...reqBody }
-    if (!updateData.password) delete updateData.password
+    if (updateData.password) {
+      updateData.password = hashPassword(updateData.password)
+    } else {
+      delete updateData.password
+    }
 
     const updated = await userModel.update(id, updateData)
     const { password: _, ...userWithoutPassword } = updated
