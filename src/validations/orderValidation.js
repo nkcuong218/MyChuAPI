@@ -56,8 +56,10 @@ const updateStatus = async (req, res, next) => {
         'any.required': 'Trạng thái đơn hàng là bắt buộc',
         'any.only': `Trạng thái phải là một trong: ${Object.values(ORDER_STATUS).join(', ')}`
       }),
-    adminNote: Joi.string().optional().allow('')
-  })
+    adminNote: Joi.string().optional().allow(''),
+    received: Joi.boolean().optional(),
+    reviewed: Joi.boolean().optional()
+  }).options({ allowUnknown: true })
 
   try {
     await correctCondition.validateAsync(req.body, { abortEarly: false })

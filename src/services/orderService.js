@@ -135,7 +135,7 @@ const getDetail = async (id) => {
   }
 }
 
-const updateStatus = async (id, { status, adminNote }) => {
+const updateStatus = async (id, { status, adminNote, received, reviewed }) => {
   try {
     const existing = await orderModel.findOneById(id)
     if (!existing) {
@@ -149,7 +149,11 @@ const updateStatus = async (id, { status, adminNote }) => {
       }
     }
 
-    const updated = await orderModel.updateStatus(id, status, adminNote)
+    const extra = {}
+    if (received !== undefined) extra.received = Boolean(received)
+    if (reviewed !== undefined) extra.reviewed = Boolean(reviewed)
+
+    const updated = await orderModel.updateStatus(id, status, adminNote, extra)
     return updated
   } catch (error) {
     throw error

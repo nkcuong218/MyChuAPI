@@ -47,6 +47,8 @@ const COLLECTION_SCHEMA = Joi.object({
     .default(ORDER_STATUS.PENDING),
   note: Joi.string().optional().allow('').default(''),
   adminNote: Joi.string().optional().allow('').default(''),
+  received: Joi.boolean().default(false),
+  reviewed: Joi.boolean().default(false),
   date: Joi.string().default(() => new Date().toISOString()),
   createdAt: Joi.date().timestamp('javascript').default(Date.now),
   updatedAt: Joi.date().timestamp('javascript').default(null),
@@ -296,13 +298,14 @@ const getAll = async ({ status, userId, search, page = 1, limit = 50 } = {}) => 
   }
 }
 
-const updateStatus = async (id, status, adminNote) => {
+const updateStatus = async (id, status, adminNote, extraFields = {}) => {
   try {
     const query = buildIdQuery(id)
     const updateDoc = {
       $set: {
         status,
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
+        ...extraFields
       }
     }
     if (adminNote !== undefined) {

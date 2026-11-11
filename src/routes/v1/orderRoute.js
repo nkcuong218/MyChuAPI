@@ -11,10 +11,10 @@ Router.route('/')
 
 Router.route('/:id')
   .get(orderController.getDetail)
-  .put(isAdmin, orderController.update)
+  .put(orderController.update)
 
 Router.route('/:id/status')
-  .put(isAdmin, orderValidation.updateStatus, orderController.updateStatus)
+  .put(orderValidation.updateStatus, orderController.updateStatus)
 
 export const orderRoute = Router
 
