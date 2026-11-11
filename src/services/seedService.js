@@ -1,3 +1,4 @@
+import { ObjectId } from 'mongodb'
 import { GET_DB } from '~/config/mongodb'
 import { DATABASE_COLLECTIONS } from '~/utils/constants'
 
@@ -9,18 +10,18 @@ const initialCategories = [
 ]
 
 const initialProducts = [
-  { id: 1, sku: 'MC-001', name: 'Mì Chũ Khô Truyền Thống', description: 'Sợi mì dai mềm, giữ trọn hương vị gạo quê Bắc Giang.', category: 'Mì Khô', rate: 4, rateNum: 342, price: 45000, originalPrice: 52000, sold: 342, stock: 120, visible: true, image: 'https://cdn.tgdd.vn/2022/01/CookRecipe/GalleryStep/hoan-thanh-hu-tieu-mi-kho.jpg' },
-  { id: 2, sku: 'MC-002', name: 'Mì Chũ Tươi Nguyên Chất 300g', description: 'Mì tươi làm từ gạo nguyên chất, thơm ngon cho bữa ăn gia đình.', category: 'Mì Tươi', rate: 4, rateNum: 89, price: 32000, sold: 89, stock: 64, visible: true, image: 'https://images.pexels.com/photos/36346857/pexels-photo-36346857/free-photo-of-c-n-c-nh-cac-s-i-mi-s-ng-d-c-s-p-x-p-theo-hinh-d-ng-tr-u-t-ng.jpeg?cs=tinysrgb&dpr=1&w=500' },
-  { id: 3, sku: 'MC-003', name: 'Bánh Đa Gạo Lứt Bắc Giang 400g', description: 'Bánh đa gạo lứt truyền thống, thơm bùi và dễ chế biến.', category: 'Bánh Đa', rate: 4, rateNum: 215, price: 38000, sold: 215, stock: 8, visible: true, image: 'https://cdn2.fptshop.com.vn/unsafe/1920x0/filters:format(webp):quality(75)/banh_da_do_4_da1b5bf259.jpg' },
-  { id: 4, sku: 'MC-004', name: 'Combo Gia Đình - 5 gói Mì Chũ Khô', description: 'Combo tiết kiệm cho gia đình, đủ dùng cho những bữa ăn ngon.', category: 'Combo', rate: 5, rateNum: 128, price: 195000, originalPrice: 230000, sold: 128, stock: 25, visible: true, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT5o1vHZyHr7_uJyshCJQSbDXhRH-fQwRZX5WHzK31PUNEoKUqxafGU3oY&s=10' },
-  { id: 5, sku: 'MC-005', name: 'Mì Chũ Rau Củ Tự Nhiên 300g', description: 'Sợi mì mềm dai, màu sắc tự nhiên từ rau củ.', category: 'Mì Khô', rate: 4, rateNum: 76, price: 52000, sold: 76, stock: 40, visible: true, image: 'https://images.unsplash.com/photo-1552611052-33e04de081de?w=600&auto=format&fit=crop' },
-  { id: 6, sku: 'MC-006', name: 'Mì Chũ Tươi Đặc Biệt 500g', description: 'Mì tươi làm từ gạo nguyên chất, phù hợp cho cả gia đình.', category: 'Mì Tươi', rate: 5, rateNum: 134, price: 48000, originalPrice: 55000, sold: 134, stock: 5, visible: true, image: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=600&auto=format&fit=crop' },
-  { id: 7, sku: 'MC-007', name: 'Bánh Đa Đỏ Bắc Giang 300g', description: 'Bánh đa truyền thống, thơm bùi và dễ chế biến.', category: 'Bánh Đa', rate: 4, rateNum: 58, price: 35000, sold: 58, stock: 70, visible: true, image: 'https://images.unsplash.com/photo-1552611052-33e04de081de?w=600&auto=format&fit=crop' },
-  { id: 8, sku: 'MC-008', name: 'Combo Quà Quê Bắc Giang', description: 'Set quà gồm mì Chũ và bánh đa, thích hợp làm quà biếu.', category: 'Combo', rate: 5, rateNum: 92, price: 225000, sold: 92, stock: 18, visible: true, image: 'https://images.unsplash.com/photo-1556761223-4c4282c73f77?w=600&auto=format&fit=crop' },
-  { id: 9, sku: 'MC-009', name: 'Mì Chũ Ngũ Sắc 300g', description: 'Mì Chũ nhiều màu tự nhiên từ rau củ, vừa ngon vừa bắt mắt.', category: 'Mì Khô', rate: 4, rateNum: 67, price: 58000, originalPrice: 68000, sold: 67, stock: 33, visible: true, image: 'https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?w=600&auto=format&fit=crop' },
-  { id: 10, sku: 'MC-010', name: 'Mì Chũ Tươi Rau Củ 500g', description: 'Mì tươi mềm dai kết hợp vị rau củ, phù hợp cho các món nước.', category: 'Mì Tươi', rate: 4, rateNum: 45, price: 55000, sold: 45, stock: 0, visible: false, image: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=600&auto=format&fit=crop' },
-  { id: 11, sku: 'MC-011', name: 'Bánh Đa Gạo Truyền Thống 500g', description: 'Bánh đa sợi mỏng, thơm mùi gạo, dùng ngon trong nhiều món ăn.', category: 'Bánh Đa', rate: 5, rateNum: 81, price: 42000, originalPrice: 50000, sold: 81, stock: 52, visible: true, image: 'https://images.unsplash.com/photo-1559847844-5315695dadae?w=600&auto=format&fit=crop' },
-  { id: 12, sku: 'MC-012', name: 'Combo Đặc Sản Bắc Giang', description: 'Hộp quà gồm mì Chũ, mì tươi và bánh đa đặc sản địa phương.', category: 'Combo', rate: 5, rateNum: 53, price: 285000, sold: 53, stock: 12, visible: true, image: 'https://images.unsplash.com/photo-1547592180-85f173990554?w=600&auto=format&fit=crop' }
+  { id: 1, sku: 'MC-001', name: 'Mì Chũ Khô Truyền Thống', description: 'Sợi mì dai mềm, giữ trọn hương vị gạo quê Bắc Giang.', category: 'Mì Khô', rate: 5, rateNum: 2, price: 45000, originalPrice: 52000, sold: 342, stock: 120, visible: true, image: 'https://cdn.tgdd.vn/2022/01/CookRecipe/GalleryStep/hoan-thanh-hu-tieu-mi-kho.jpg' },
+  { id: 2, sku: 'MC-002', name: 'Mì Chũ Tươi Nguyên Chất 300g', description: 'Mì tươi làm từ gạo nguyên chất, thơm ngon cho bữa ăn gia đình.', category: 'Mì Tươi', rate: 4, rateNum: 1, price: 32000, sold: 89, stock: 64, visible: true, image: 'https://images.pexels.com/photos/36346857/pexels-photo-36346857/free-photo-of-c-n-c-nh-cac-s-i-mi-s-ng-d-c-s-p-x-p-theo-hinh-d-ng-tr-u-t-ng.jpeg?cs=tinysrgb&dpr=1&w=500' },
+  { id: 3, sku: 'MC-003', name: 'Bánh Đa Gạo Lứt Bắc Giang 400g', description: 'Bánh đa gạo lứt truyền thống, thơm bùi và dễ chế biến.', category: 'Bánh Đa', rate: 5, rateNum: 0, price: 38000, sold: 215, stock: 8, visible: true, image: 'https://cdn2.fptshop.com.vn/unsafe/1920x0/filters:format(webp):quality(75)/banh_da_do_4_da1b5bf259.jpg' },
+  { id: 4, sku: 'MC-004', name: 'Combo Gia Đình - 5 gói Mì Chũ Khô', description: 'Combo tiết kiệm cho gia đình, đủ dùng cho những bữa ăn ngon.', category: 'Combo', rate: 5, rateNum: 0, price: 195000, originalPrice: 230000, sold: 128, stock: 25, visible: true, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT5o1vHZyHr7_uJyshCJQSbDXhRH-fQwRZX5WHzK31PUNEoKUqxafGU3oY&s=10' },
+  { id: 5, sku: 'MC-005', name: 'Mì Chũ Rau Củ Tự Nhiên 300g', description: 'Sợi mì mềm dai, màu sắc tự nhiên từ rau củ.', category: 'Mì Khô', rate: 5, rateNum: 0, price: 52000, sold: 76, stock: 40, visible: true, image: 'https://images.unsplash.com/photo-1552611052-33e04de081de?w=600&auto=format&fit=crop' },
+  { id: 6, sku: 'MC-006', name: 'Mì Chũ Tươi Đặc Biệt 500g', description: 'Mì tươi làm từ gạo nguyên chất, phù hợp cho cả gia đình.', category: 'Mì Tươi', rate: 5, rateNum: 0, price: 48000, originalPrice: 55000, sold: 134, stock: 5, visible: true, image: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=600&auto=format&fit=crop' },
+  { id: 7, sku: 'MC-007', name: 'Bánh Đa Đỏ Bắc Giang 300g', description: 'Bánh đa truyền thống, thơm bùi và dễ chế biến.', category: 'Bánh Đa', rate: 5, rateNum: 0, price: 35000, sold: 58, stock: 70, visible: true, image: 'https://images.unsplash.com/photo-1552611052-33e04de081de?w=600&auto=format&fit=crop' },
+  { id: 8, sku: 'MC-008', name: 'Combo Quà Quê Bắc Giang', description: 'Set quà gồm mì Chũ và bánh đa, thích hợp làm quà biếu.', category: 'Combo', rate: 5, rateNum: 0, price: 225000, sold: 92, stock: 18, visible: true, image: 'https://images.unsplash.com/photo-1556761223-4c4282c73f77?w=600&auto=format&fit=crop' },
+  { id: 9, sku: 'MC-009', name: 'Mì Chũ Ngũ Sắc 300g', description: 'Mì Chũ nhiều màu tự nhiên từ rau củ, vừa ngon vừa bắt mắt.', category: 'Mì Khô', rate: 5, rateNum: 0, price: 58000, originalPrice: 68000, sold: 67, stock: 33, visible: true, image: 'https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?w=600&auto=format&fit=crop' },
+  { id: 10, sku: 'MC-010', name: 'Mì Chũ Tươi Rau Củ 500g', description: 'Mì tươi mềm dai kết hợp vị rau củ, phù hợp cho các món nước.', category: 'Mì Tươi', rate: 5, rateNum: 0, price: 55000, sold: 45, stock: 0, visible: false, image: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=600&auto=format&fit=crop' },
+  { id: 11, sku: 'MC-011', name: 'Bánh Đa Gạo Truyền Thống 500g', description: 'Bánh đa sợi mỏng, thơm mùi gạo, dùng ngon trong nhiều món ăn.', category: 'Bánh Đa', rate: 5, rateNum: 0, price: 42000, originalPrice: 50000, sold: 81, stock: 52, visible: true, image: 'https://images.unsplash.com/photo-1559847844-5315695dadae?w=600&auto=format&fit=crop' },
+  { id: 12, sku: 'MC-012', name: 'Combo Đặc Sản Bắc Giang', description: 'Hộp quà gồm mì Chũ, mì tươi và bánh đa đặc sản địa phương.', category: 'Combo', rate: 5, rateNum: 0, price: 285000, sold: 53, stock: 12, visible: true, image: 'https://images.unsplash.com/photo-1547592180-85f173990554?w=600&auto=format&fit=crop' }
 ]
 
 const initialUsers = [
@@ -59,11 +60,9 @@ const initialOrders = [
 ]
 
 const initialReviews = [
-  { id: 1, productId: 1, name: 'Nguyễn Thị Hoa', city: 'Hà Nội', review: 'Mì Chũ này đúng vị quê hương, dai giòn, không bị nát khi nấu. Gia đình tôi đặt mua thường xuyên!', rate: 5, date: '2026-11-01' },
-  { id: 2, productId: 1, name: 'Trần Văn Minh', city: 'TP. Hồ Chí Minh', review: 'Lần đầu thử Mì Chũ truyền thống, không ngờ ngon thế. Giao hàng nhanh, đóng gói cẩn thận.', rate: 5, date: '2026-11-03' },
-  { id: 3, productId: 2, name: 'Lê Phương Thảo', city: 'Đà Nẵng', review: 'Mua mì tươi về ăn lẩu tuyệt vời, sợi mì mềm dai không nát chút nào. Sẽ tiếp tục ủng hộ!', rate: 4, date: '2026-11-05' },
-  { id: 4, productId: 3, name: 'Phạm Văn Nam', city: 'Bắc Ninh', review: 'Bánh đa gạo lứt thơm bùi, ăn kiêng healthy rất tốt.', rate: 5, date: '2026-11-06' },
-  { id: 5, productId: 4, name: 'Hoàng Lan', city: 'Hải Phòng', review: 'Combo gia đình rất tiết kiệm, đóng gói hộp đẹp làm quà biếu chuẩn luôn.', rate: 5, date: '2026-11-07' }
+  { name: 'Nguyễn Thị Hoa', city: 'Hà Nội', review: 'Mì Chũ này đúng vị quê hương, dai giòn, không bị nát khi nấu. Gia đình tôi đặt mua thường xuyên!', rate: 5, date: '2026-11-01' },
+  { name: 'Trần Văn Minh', city: 'TP. Hồ Chí Minh', review: 'Lần đầu thử Mì Chũ truyền thống, không ngờ ngon thế. Giao hàng nhanh, đóng gói cẩn thận.', rate: 5, date: '2026-11-03' },
+  { name: 'Lê Phương Thảo', city: 'Đà Nẵng', review: 'Mua mì tươi về ăn lẩu tuyệt vời, sợi mì mềm dai không nát chút nào. Sẽ tiếp tục ủng hộ!', rate: 4, date: '2026-11-05' }
 ]
 
 const initialBlogs = [
@@ -120,14 +119,48 @@ const seedData = async (force = false) => {
     const now = Date.now()
     const mapWithDates = (arr) => arr.map((item) => ({ ...item, createdAt: now, updatedAt: null, _destroy: false }))
 
+    const [insertedProds, insertedUsers] = await Promise.all([
+      db.collection(DATABASE_COLLECTIONS.PRODUCTS).insertMany(mapWithDates(initialProducts)),
+      db.collection(DATABASE_COLLECTIONS.USERS).insertMany(mapWithDates(initialUsers))
+    ])
+    const p1ObjectId = insertedProds.insertedIds[0]
+    const p2ObjectId = insertedProds.insertedIds[1]
+
+    const reviewsToInsert = [
+      { productId: p1ObjectId, ...initialReviews[0], createdAt: now },
+      { productId: p1ObjectId, ...initialReviews[1], createdAt: now },
+      { productId: p2ObjectId, ...initialReviews[2], createdAt: now }
+    ]
+
+    const ordersToInsert = initialOrders.map((ord) => {
+      const uIndex = initialUsers.findIndex((u) => u.id === ord.userId)
+      const userObjectId = uIndex !== -1 ? insertedUsers.insertedIds[uIndex] : new ObjectId()
+
+      const itemsWithObjectId = ord.items.map((item) => {
+        const pIndex = initialProducts.findIndex((p) => p.id === item.productId)
+        const prodObjectId = pIndex !== -1 ? insertedProds.insertedIds[pIndex] : new ObjectId()
+        return {
+          ...item,
+          productId: prodObjectId
+        }
+      })
+
+      return {
+        ...ord,
+        userId: userObjectId,
+        items: itemsWithObjectId,
+        createdAt: now,
+        updatedAt: null,
+        _destroy: false
+      }
+    })
+
     await Promise.all([
       db.collection(DATABASE_COLLECTIONS.CATEGORIES).insertMany(mapWithDates(initialCategories)),
-      db.collection(DATABASE_COLLECTIONS.PRODUCTS).insertMany(mapWithDates(initialProducts)),
-      db.collection(DATABASE_COLLECTIONS.USERS).insertMany(mapWithDates(initialUsers)),
       db.collection(DATABASE_COLLECTIONS.VOUCHERS).insertMany(mapWithDates(initialVouchers)),
       db.collection(DATABASE_COLLECTIONS.BANNERS).insertMany(mapWithDates(initialBanners)),
-      db.collection(DATABASE_COLLECTIONS.ORDERS).insertMany(mapWithDates(initialOrders)),
-      db.collection(DATABASE_COLLECTIONS.REVIEWS).insertMany(initialReviews.map((i) => ({ ...i, createdAt: now }))),
+      db.collection(DATABASE_COLLECTIONS.ORDERS).insertMany(ordersToInsert),
+      db.collection(DATABASE_COLLECTIONS.REVIEWS).insertMany(reviewsToInsert),
       db.collection(DATABASE_COLLECTIONS.BLOGS).insertMany(mapWithDates(initialBlogs))
     ])
 

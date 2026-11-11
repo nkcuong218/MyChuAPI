@@ -9,7 +9,11 @@ const COLLECTION_NAME = DATABASE_COLLECTIONS.ORDERS
 // Dinh nghia toan bo Schema cua Order Model
 const COLLECTION_SCHEMA = Joi.object({
   id: Joi.string().required().trim().strict(),
-  userId: Joi.alternatives().try(Joi.number(), Joi.string()).optional().allow(null),
+  userId: Joi.alternatives().try(
+    Joi.object().instance(ObjectId),
+    Joi.string(),
+    Joi.number()
+  ).optional().allow(null),
   customer: Joi.object({
     name: Joi.string().optional().allow('').default(''),
     phone: Joi.string().optional().allow('').default(''),
@@ -19,7 +23,11 @@ const COLLECTION_SCHEMA = Joi.object({
   items: Joi.array()
     .items(
       Joi.object({
-        productId: Joi.alternatives().try(Joi.number(), Joi.string()).required(),
+        productId: Joi.alternatives().try(
+          Joi.object().instance(ObjectId),
+          Joi.string(),
+          Joi.number()
+        ).required(),
         name: Joi.string().required(),
         image: Joi.string().optional().allow('').default(''),
         price: Joi.number().required().min(0),
@@ -58,11 +66,143 @@ const buildIdQuery = (id) => {
   return { id: String(id) }
 }
 
+const resolveUserObjectId = async (inputUserId, customerEmail) => {
+  if (inputUserId) {
+    if (inputUserId instanceof ObjectId) return inputUserId
+    const strId = String(inputUserId).trim()
+    if (ObjectId.isValid(strId) && String(new ObjectId(strId)) === strId) {
+      return new ObjectId(strId)
+    }
+    try {
+      const user = await GET_DB().collection(DATABASE_COLLECTIONS.USERS).findOne({
+        $or: [
+          { id: Number(inputUserId) || inputUserId },
+          { id: strId }
+        ]
+      })
+      if (user?._id) return user._id
+    } catch {}
+  }
+
+  // Fallback: Neu userId khong duoc truyen hoac khong tim thay, tim user theo customer.email
+  if (customerEmail && typeof customerEmail === 'string' && customerEmail.trim() !== '') {
+    try {
+      const user = await GET_DB().collection(DATABASE_COLLECTIONS.USERS).findOne({
+        email: { $regex: `^${customerEmail.trim()}$`, $options: 'i' },
+        _destroy: false
+      })
+      if (user?._id) return user._id
+    } catch {}
+  }
+
+  return null
+}
+
+const resolveProductObjectId = async (inputProductId) => {
+  if (!inputProductId) return null
+  if (inputProductId instanceof ObjectId) return inputProductId
+  const strId = String(inputProductId).trim()
+  if (ObjectId.isValid(strId) && String(new ObjectId(strId)) === strId) {
+    return new ObjectId(strId)
+  }
+  try {
+    const product = await GET_DB().collection(DATABASE_COLLECTIONS.PRODUCTS).findOne({
+      $or: [
+        { id: Number(inputProductId) || inputProductId },
+        { id: strId },
+        { sku: strId }
+      ]
+    })
+    if (product?._id) return product._id
+  } catch {}
+  return null
+}
+
+const migrateLegacyOrders = async () => {
+  try {
+    const db = GET_DB()
+    const legacyOrders = await db.collection(COLLECTION_NAME).find({
+      $or: [
+        { userId: { $type: 'string' } },
+        { userId: { $type: 'number' } },
+        { userId: null },
+        { 'items.productId': { $type: 'string' } },
+        { 'items.productId': { $type: 'number' } }
+      ]
+    }).toArray()
+
+    if (!legacyOrders || legacyOrders.length === 0) return
+
+    for (const order of legacyOrders) {
+      const updateFields = {}
+      if (!order.userId || !(order.userId instanceof ObjectId)) {
+        const resolvedUserId = await resolveUserObjectId(order.userId, order.customer?.email)
+        if (resolvedUserId) {
+          updateFields.userId = resolvedUserId
+        }
+      }
+
+      if (Array.isArray(order.items)) {
+        let changed = false
+        const updatedItems = await Promise.all(
+          order.items.map(async (item) => {
+            if (item.productId && !(item.productId instanceof ObjectId)) {
+              changed = true
+              let resolvedPId = await resolveProductObjectId(item.productId)
+              if (!resolvedPId && ObjectId.isValid(item.productId)) {
+                resolvedPId = new ObjectId(item.productId)
+              }
+              return {
+                ...item,
+                productId: resolvedPId || item.productId
+              }
+            }
+            return item
+          })
+        )
+        if (changed) {
+          updateFields.items = updatedItems
+        }
+      }
+
+      if (Object.keys(updateFields).length > 0) {
+        await db.collection(COLLECTION_NAME).updateOne(
+          { _id: order._id },
+          { $set: updateFields }
+        )
+      }
+    }
+  } catch (err) {
+    console.error('migrateLegacyOrders error:', err)
+  }
+}
+
 const createNew = async (data) => {
   try {
+    const userObjectId = await resolveUserObjectId(data.userId, data.customer?.email)
+
+    const resolvedItems = await Promise.all(
+      (data.items || []).map(async (item) => {
+        let pId = await resolveProductObjectId(item.productId)
+        if (!pId) {
+          pId = (item.productId && ObjectId.isValid(item.productId))
+            ? new ObjectId(item.productId)
+            : new ObjectId()
+        }
+        return {
+          ...item,
+          productId: pId,
+          price: Number(item.price) || 0,
+          quantity: Number(item.quantity) || 1
+        }
+      })
+    )
+
     const rawData = {
       ...data,
       id: data.id || `MC${new Date().toISOString().slice(0, 10).replace(/-/g, '')}${String(Math.floor(Math.random() * 900) + 100)}`,
+      userId: userObjectId,
+      items: resolvedItems,
       status: data.status || ORDER_STATUS.PENDING,
       payment: data.payment || 'Thanh toán khi nhận hàng',
       shippingFee: Number(data.shippingFee) || 0,
@@ -94,6 +234,8 @@ const findOneById = async (id) => {
 
 const getAll = async ({ status, userId, search, page = 1, limit = 50 } = {}) => {
   try {
+    await migrateLegacyOrders()
+
     const filter = { _destroy: false }
 
     if (status && status !== 'all') {
@@ -101,17 +243,33 @@ const getAll = async ({ status, userId, search, page = 1, limit = 50 } = {}) => 
     }
 
     if (userId) {
-      filter.userId = Number(userId) || userId
+      const orConditions = []
+      if (ObjectId.isValid(userId) && String(new ObjectId(userId)) === String(userId)) {
+        orConditions.push({ userId: new ObjectId(userId) })
+      }
+      orConditions.push({ userId: String(userId) })
+      if (!isNaN(Number(userId))) {
+        orConditions.push({ userId: Number(userId) })
+        const u = await GET_DB().collection(DATABASE_COLLECTIONS.USERS).findOne({ id: Number(userId) })
+        if (u?._id) orConditions.push({ userId: u._id })
+      }
+      filter.$or = orConditions
     }
 
     if (search && search.trim() !== '') {
       const keyword = search.trim()
-      filter.$or = [
+      const searchCondition = [
         { id: { $regex: keyword, $options: 'i' } },
         { 'customer.name': { $regex: keyword, $options: 'i' } },
         { 'customer.phone': { $regex: keyword, $options: 'i' } },
         { 'customer.email': { $regex: keyword, $options: 'i' } }
       ]
+      if (filter.$or) {
+        filter.$and = [{ $or: filter.$or }, { $or: searchCondition }]
+        delete filter.$or
+      } else {
+        filter.$or = searchCondition
+      }
     }
 
     const skip = (Number(page) - 1) * Number(limit)

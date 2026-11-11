@@ -9,6 +9,7 @@ import { bannerRoute } from './bannerRoute'
 import { appearanceRoute } from './appearanceRoute'
 import { dashboardRoute } from './dashboardRoute'
 import { blogRoute } from './blogRoute'
+import { reviewRoute } from './reviewRoute'
 import { seedRoute } from './seedRoute'
 import { contactRoute } from './contactRoute'
 
@@ -28,6 +29,7 @@ Router.use('/banners', bannerRoute)
 Router.use('/appearance', appearanceRoute)
 Router.use('/dashboard', dashboardRoute)
 Router.use('/blogs', blogRoute)
+Router.use('/reviews', reviewRoute)
 Router.use('/seed', seedRoute)
 Router.use('/contacts', contactRoute)
 
