@@ -1,6 +1,7 @@
 import express from 'express'
 import exitHook from 'async-exit-hook'
 import { CONNECT_DB, CLOSE_DB } from '~/config/mongodb'
+import { CONNECT_REDIS, CLOSE_REDIS } from '~/config/redis'
 import { env } from '~/config/environment'
 import { APIs_V1 } from '~/routes/v1'
 import { corsMiddleware } from '~/config/cors'
@@ -33,13 +34,15 @@ const START_SERVER = () => {
   exitHook(() => {
     console.log('4. Server is shutting down...')
     CLOSE_DB()
-    console.log('5. Disconnected from MongoDB Cloud Atlas!')
+    CLOSE_REDIS()
+    console.log('5. Disconnected from MongoDB and Redis!')
   })
 }
 
 console.log('1. Connecting to MongoDB cloud Atlas ...')
 CONNECT_DB()
   .then(() => console.log('2. Connected to MongoDB Cloud Atlas'))
+  .then(() => CONNECT_REDIS())
   .then(() => START_SERVER())
   .catch((error) => {
     console.error(error)

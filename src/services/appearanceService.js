@@ -1,27 +1,27 @@
 import { appearanceModel } from '~/models/appearanceModel'
+import { CACHE_PATTERNS, cacheGet, cacheSet, cacheDel } from '~/utils/cache'
+
+const CACHE_TTL = 60 * 10 // 10 phut
 
 const getSettings = async () => {
-  try {
-    return await appearanceModel.getSettings()
-  } catch (error) {
-    throw error
-  }
+  const cached = await cacheGet(CACHE_PATTERNS.APPEARANCE)
+  if (cached) return cached
+
+  const settings = await appearanceModel.getSettings()
+  await cacheSet(CACHE_PATTERNS.APPEARANCE, settings, CACHE_TTL)
+  return settings
 }
 
 const updateSettings = async (reqBody) => {
-  try {
-    return await appearanceModel.updateSettings(reqBody)
-  } catch (error) {
-    throw error
-  }
+  const updated = await appearanceModel.updateSettings(reqBody)
+  await cacheDel(CACHE_PATTERNS.APPEARANCE)
+  return updated
 }
 
 const resetSettings = async () => {
-  try {
-    return await appearanceModel.resetSettings()
-  } catch (error) {
-    throw error
-  }
+  const reset = await appearanceModel.resetSettings()
+  await cacheDel(CACHE_PATTERNS.APPEARANCE)
+  return reset
 }
 
 export const appearanceService = {
@@ -29,4 +29,3 @@ export const appearanceService = {
   updateSettings,
   resetSettings
 }
-

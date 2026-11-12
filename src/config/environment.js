@@ -6,5 +6,6 @@ export const env = {
   LOCAL_DEV_APP_HOST: process.env.LOCAL_DEV_APP_HOST || 'localhost',
   LOCAL_DEV_APP_PORT: process.env.LOCAL_DEV_APP_PORT || 8017,
   BUILD_MODE: process.env.BUILD_MODE || 'dev',
-  AUTHOR: process.env.AUTHOR || 'TrungQuanDev'
+  AUTHOR: process.env.AUTHOR || 'TrungQuanDev',
+  REDIS_URL: process.env.REDIS_URL || 'redis://127.0.0.1:6379'
 }

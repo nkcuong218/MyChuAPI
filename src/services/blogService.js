@@ -1,57 +1,68 @@
 import { blogModel } from '~/models/blogModel'
 import ApiError from '~/utils/ApiError'
 import { StatusCodes } from '~/utils/constants'
+import { CACHE_PATTERNS, buildCacheKey, cacheGet, cacheSet, cacheDel } from '~/utils/cache'
+
+const CACHE_TTL = 60 * 5 // 5 phut
 
 const getAll = async (queryParams) => {
-  try {
-    return await blogModel.getAll(queryParams)
-  } catch (error) {
-    throw error
+  const hasSearch = Boolean(queryParams?.search && String(queryParams.search).trim() !== '')
+  if (!hasSearch) {
+    const cacheKey = buildCacheKey('blogs:list', queryParams)
+    const cached = await cacheGet(cacheKey)
+    if (cached) return cached
+
+    const blogs = await blogModel.getAll(queryParams)
+    await cacheSet(cacheKey, blogs, CACHE_TTL)
+    return blogs
   }
+
+  return await blogModel.getAll(queryParams)
 }
 
 const getBySlug = async (slug) => {
-  try {
-    const blog = await blogModel.findBySlug(slug)
-    if (!blog) {
-      throw new ApiError(StatusCodes.NOT_FOUND, 'Bài viết không tồn tại!')
-    }
-    return blog
-  } catch (error) {
-    throw error
+  const cacheKey = `blogs:slug:${slug}`
+  const cached = await cacheGet(cacheKey)
+  if (cached) return cached
+
+  const blog = await blogModel.findBySlug(slug)
+  if (!blog) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Bài viết không tồn tại!')
   }
+
+  await cacheSet(cacheKey, blog, CACHE_TTL)
+  return blog
 }
 
 const createNew = async (reqBody) => {
-  try {
-    return await blogModel.createNew(reqBody)
-  } catch (error) {
-    throw error
-  }
+  const created = await blogModel.createNew(reqBody)
+  await cacheDel(CACHE_PATTERNS.BLOGS_ALL)
+  return created
 }
 
 const getReviews = async (productId) => {
-  try {
-    return await blogModel.getReviews(productId)
-  } catch (error) {
-    throw error
-  }
+  const keySuffix = productId ? String(productId).trim() : 'all'
+  const cacheKey = `reviews:${keySuffix}`
+  const cached = await cacheGet(cacheKey)
+  if (cached) return cached
+
+  const reviews = await blogModel.getReviews(productId)
+  await cacheSet(cacheKey, reviews, CACHE_TTL)
+  return reviews
 }
 
 const deleteReview = async (id) => {
-  try {
-    return await blogModel.deleteReview(id)
-  } catch (error) {
-    throw error
-  }
+  const result = await blogModel.deleteReview(id)
+  // Xoa ca cache reviews va products vi syncProductRating cap nhat lai rate/rateNum cua san pham
+  await cacheDel(CACHE_PATTERNS.REVIEWS_ALL, CACHE_PATTERNS.PRODUCTS_ALL)
+  return result
 }
 
 const createReview = async (reqBody) => {
-  try {
-    return await blogModel.createReview(reqBody)
-  } catch (error) {
-    throw error
-  }
+  const created = await blogModel.createReview(reqBody)
+  // Xoa ca cache reviews va products vi syncProductRating cap nhat lai rate/rateNum cua san pham
+  await cacheDel(CACHE_PATTERNS.REVIEWS_ALL, CACHE_PATTERNS.PRODUCTS_ALL)
+  return created
 }
 
 export const blogService = {
@@ -62,4 +73,3 @@ export const blogService = {
   deleteReview,
   createReview
 }
-

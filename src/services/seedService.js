@@ -1,6 +1,7 @@
 import { ObjectId } from 'mongodb'
 import { GET_DB } from '~/config/mongodb'
 import { DATABASE_COLLECTIONS } from '~/utils/constants'
+import { CACHE_PATTERNS, cacheDel } from '~/utils/cache'
 
 const initialCategories = [
   { id: 1, name: 'Mì Khô', count: 12, image: 'https://cdn.tgdd.vn/2022/01/CookRecipe/GalleryStep/hoan-thanh-hu-tieu-mi-kho.jpg' },
@@ -163,6 +164,8 @@ const seedData = async (force = false) => {
       db.collection(DATABASE_COLLECTIONS.REVIEWS).insertMany(reviewsToInsert),
       db.collection(DATABASE_COLLECTIONS.BLOGS).insertMany(mapWithDates(initialBlogs))
     ])
+
+    await cacheDel(...Object.values(CACHE_PATTERNS))
 
     return { message: 'Khởi tạo dữ liệu mẫu thành công!' }
   } catch (error) {

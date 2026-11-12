@@ -3,6 +3,7 @@ import { productModel } from '~/models/productModel'
 import { voucherModel } from '~/models/voucherModel'
 import ApiError from '~/utils/ApiError'
 import { StatusCodes, ORDER_STATUS } from '~/utils/constants'
+import { CACHE_PATTERNS, cacheDel } from '~/utils/cache'
 
 const createNew = async (reqBody) => {
   try {
@@ -109,6 +110,8 @@ const createNew = async (reqBody) => {
     }
 
     const createdOrder = await orderModel.createNew(orderData)
+    // Xoa cache san pham (do stock/sold thay doi) va voucher (do luot su dung thay doi)
+    await cacheDel(CACHE_PATTERNS.PRODUCTS_ALL, CACHE_PATTERNS.VOUCHERS_ALL)
     return createdOrder
   } catch (error) {
     throw error
@@ -143,10 +146,12 @@ const updateStatus = async (id, { status, adminNote, received, reviewed }) => {
     }
 
     // If order is cancelled from non-cancelled status, restore stock
+    let stockChanged = false
     if (status === ORDER_STATUS.CANCELLED && existing.status !== ORDER_STATUS.CANCELLED) {
       for (const item of existing.items) {
         await productModel.updateStock(item.productId, -item.quantity)
       }
+      stockChanged = true
     }
 
     const extra = {}
@@ -154,6 +159,9 @@ const updateStatus = async (id, { status, adminNote, received, reviewed }) => {
     if (reviewed !== undefined) extra.reviewed = Boolean(reviewed)
 
     const updated = await orderModel.updateStatus(id, status, adminNote, extra)
+    if (stockChanged) {
+      await cacheDel(CACHE_PATTERNS.PRODUCTS_ALL)
+    }
     return updated
   } catch (error) {
     throw error
